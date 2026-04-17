@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NT TechWorks – Full Stack Web Development</title>
+<link rel="icon" type="image/png" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+<style>
+  /* ── DESIGN TOKENS ─────────────────────────────── */
+  :root {
+    --bg:        #060810;
+    --bg2:       #0b0f1a;
+    --bg3:       #0f1524;
+    --card:      rgba(255,255,255,0.04);
+    --border:    rgba(255,255,255,0.08);
+    --accent:    #00d4ff;
+    --accent2:   #7c3aed;
+    --accent3:   #f59e0b;
+    --text:      #e8eaf0;
+    --muted:     #8892a4;
+    --radius:    16px;
+    --glow:      0 0 40px rgba(0,212,255,0.15);
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  /* ── RESET ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+  img { display: block; width: 100%; }
+  a  { text-decoration: none; color: inherit; }
+  ul { list-style: none; }
+
+  /* ── NOISE OVERLAY ─────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: .4;
+  }
+
+  /* ── SCROLLBAR ─────────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 99px; }
+
+  /* ── REUSABLE ──────────────────────────────────── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .section    { padding: 100px 0; }
+  .tag {
+    display: inline-block;
+    font-family: var(--font-head);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(0,212,255,.08);
+    border: 1px solid rgba(0,212,255,.2);
+    padding: 4px 14px;
+    border-radius: 99px;
+    margin-bottom: 18px;
+  }
+  .section-title {
+    font-family: var(--font-head);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .section-sub {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 580px;
+    margin-bottom: 56px;
+  }
+  .grad-text {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-head); font-weight: 700; font-size: .9rem;
+    padding: 14px 30px; border-radius: 99px;
+    cursor: pointer; transition: all .3s ease; border: none;
+    letter-spacing: .04em;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 0 30px rgba(0,212,255,.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 50px rgba(0,212,255,.45);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .glass {
+    background: var(--card);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    border-radius: var(--radius);
+  }
+
+  /* ── REVEAL ANIMATIONS ─────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-l { opacity:0; transform: translateX(-40px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal-r { opacity:0; transform: translateX(40px);  transition: opacity .7s ease, transform .7s ease; }
+  .reveal-l.visible, .reveal-r.visible { opacity:1; transform: translateX(0); }
+
+  /* ── NAVBAR ─────────────────────────────────────── */
+  #navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    padding: 18px 0;
+    transition: all .4s ease;
+  }
+  #navbar.scrolled {
+    background: rgba(6,8,16,.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+  }
+  .nav-inner {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -.02em;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links {
+    display: flex; align-items: center; gap: 32px;
+  }
+  .nav-links a {
+    font-size: .9rem; font-weight: 500; color: var(--muted);
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-cta { display: flex; gap: 12px; align-items: center; }
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px; cursor: pointer;
+    padding: 4px;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--text); border-radius: 2px;
+    transition: all .3s ease;
+  }
+  .mobile-menu {
+    display: none; position: fixed; inset: 0; top: 62px;
+    background: rgba(6,8,16,.97); backdrop-filter: blur(20px);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 32px; z-index: 999;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-family: var(--font-head); font-size: 1.6rem; font-weight: 700;
+    color: var(--text); transition: color .2s;
+  }
+  .mobile-menu a:hover { color: var(--accent); }
+
+  /* ── HERO ───────────────────────────────────────── */
+  #hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    position: relative; overflow: hidden;
+    padding: 120px 0 80px;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .hero-orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(100px); opacity: .35;
+  }
+  .orb1 { width: 600px; height: 600px; background: var(--accent2); top: -200px; right: -150px; }
+  .orb2 { width: 400px; height: 400px; background: var(--accent);  bottom: -100px; left: -100px; }
+  .orb3 { width: 300px; height: 300px; background: var(--accent3); top: 40%; left: 40%; opacity: .12; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    align-items: center; gap: 60px;
+    position: relative; z-index: 1;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,212,255,.08); border: 1px solid rgba(0,212,255,.2);
+    border-radius: 99px; padding: 6px 16px; font-size: .8rem;
+    color: var(--accent); margin-bottom: 24px; font-weight: 500;
+  }
+  .hero-badge::before {
+    content: ''; width: 7px; height: 7px; background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: .3; }
+  }
+  .hero-title {
+    font-family: var(--font-head);
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 800; line-height: 1.1;
+    margin-bottom: 22px;
+  }
+  .hero-sub {
+    color: var(--muted); font-size: 1.1rem; max-width: 500px;
+    margin-bottom: 36px; line-height: 1.75;
+  }
+  .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+  .hero-stats {
+    display: flex; gap: 32px; margin-top: 44px; flex-wrap: wrap;
+  }
+  .stat-item { }
+  .stat-num {
+    font-family: var(--font-head); font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label { font-size: .8rem; color: var(--muted); font-weight: 400; }
+  /* Hero visual */
+  .hero-visual {
+    position: relative; display: flex; justify-content: center; align-items: center;
+  }
+  .hero-card-main {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    width: 340px;
+    box-shadow: var(--glow), 0 40px 80px rgba(0,0,0,.5);
+    position: relative;
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-18px); }
+  }
+  .hero-card-main pre {
+    font-family: 'Courier New', monospace;
+    font-size: .78rem; color: var(--muted);
+    line-height: 1.8; overflow: hidden;
+  }
+  .hero-card-main pre .kw  { color: #c792ea; }
+  .hero-card-main pre .fn  { color: var(--accent); }
+  .hero-card-main pre .str { color: #c3e88d; }
+  .hero-card-main pre .num { color: var(--accent3); }
+  .card-dot-row {
+    display: flex; gap: 7px; margin-bottom: 18px;
+  }
+  .card-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .d1{background:#ff5f56;} .d2{background:#ffbd2e;} .d3{background:#27c93f;}
+  .floating-chip {
+    position: absolute;
+    background: rgba(255,255,255,.07);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 8px 16px;
+    font-size: .75rem; font-weight: 600;
+    white-space: nowrap;
+    backdrop-filter: blur(12px);
+    animation: float 6s ease-in-out infinite;
+  }
+  .chip1 { top: -20px; right: -30px; animation-delay: 1s; color: var(--accent); }
+  .chip2 { bottom: 20px; left: -40px; animation-delay: 2.5s; color: #c3e88d; }
+  .chip3 { bottom: -20px; right: 10px;  animation-delay: 1.8s; color: var(--accent3); }
+
+  /* ── ABOUT ──────────────────────────────────────── */
+  #about { background: var(--bg2); }
+  .about-grid {
+    display: grid; grid-template-columns: 1fr;
+    gap: 0; align-items: center;
+  }
+  .about-text { max-width: 760px; }
+  .about-img-wrap {
+    position: relative;
+  }
+  .about-img-box {
+    border-radius: 20px; overflow: hidden;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    aspect-ratio: 4/3;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .about-svg { width: 70%; opacity: .7; }
+  .about-badge-float {
+    position: absolute; bottom: -18px; right: -18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 16px; padding: 16px 22px; font-size: .85rem;
+    font-weight: 700; font-family: var(--font-head);
+    box-shadow: 0 20px 40px rgba(0,212,255,.25);
+  }
+  .about-quote {
+    border-left: 3px solid var(--accent);
+    padding: 14px 20px;
+    background: rgba(0,212,255,.05);
+    border-radius: 0 12px 12px 0;
+    font-style: italic; color: var(--muted);
+    margin-top: 24px; font-size: .95rem;
+  }
+
+  /* ── SKILLS ─────────────────────────────────────── */
+  #skills { background: var(--bg); }
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .skill-card {
+    padding: 22px 20px;
+    border-radius: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all .3s ease;
+    position: relative; overflow: hidden;
+  }
+  .skill-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,.06), rgba(124,58,237,.06));
+    opacity: 0; transition: opacity .3s;
+  }
+  .skill-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: var(--glow); }
+  .skill-card:hover::before { opacity: 1; }
+  .skill-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .skill-name { font-family: var(--font-head); font-weight: 700; font-size: .95rem; margin-bottom: 8px; }
+  .skill-bar-wrap {
+    height: 4px; background: rgba(255,255,255,.07); border-radius: 99px; overflow: hidden;
+  }
+  .skill-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 1.2s ease;
+    width: 0;
+  }
+
+  /* ── SERVICES ───────────────────────────────────── */
+  #services { background: var(--bg2); }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .service-card {
+    padding: 30px 26px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all .35s ease;
+    position: relative; overflow: hidden;
+  }
+  .service-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transform: scaleX(0); transition: transform .35s ease;
+    transform-origin: left;
+  }
+  .service-card:hover { transform: translateY(-6px); border-color: rgba(0,212,255,.3); }
+  .service-card:hover::after { transform: scaleX(1); }
+  .svc-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(124,58,237,.15));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 18px;
+    border: 1px solid rgba(0,212,255,.2);
+  }
+  .svc-title { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; margin-bottom: 10px; }
+  .svc-desc  { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+
+  /* ── PROJECTS ───────────────────────────────────── */
+  #projects { background: var(--bg); }
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+  }
+  .project-card {
+    border-radius: 18px; overflow: hidden;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    transition: all .35s ease;
+  }
+  .project-card:hover { transform: translateY(-8px); border-color: var(--accent); box-shadow: var(--glow); }
+  .project-img {
+    width: 100%; height: 210px; object-fit: cover;
+    position: relative; overflow: hidden;
+  }
+  .project-thumb {
+    width: 100%; height: 210px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .project-thumb::before {
+    content: '';
+    position: absolute; inset: 0;
+  }
+  .thumb-restaurant::before { background: linear-gradient(135deg, #1a0a00, #3d1f00); }
+  .thumb-gym::before        { background: linear-gradient(135deg, #000a1a, #001a3d); }
+  .thumb-ecom::before       { background: linear-gradient(135deg, #0a001a, #1a003d); }
+  .thumb-emoji { position: relative; z-index: 1; }
+  .project-body { padding: 22px 24px; }
+  .project-title { font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
+  .project-desc  { color: var(--muted); font-size: .88rem; margin-bottom: 16px; line-height: 1.6; }
+  .tech-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tech-tag {
+    font-size: .72rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 99px;
+    background: rgba(124,58,237,.15);
+    border: 1px solid rgba(124,58,237,.25);
+    color: #c4b5fd;
+  }
+  .project-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .project-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .82rem; font-weight: 600; color: var(--accent);
+    transition: gap .2s;
+  }
+  .project-link:hover { gap: 10px; }
+
+  /* ── TEAM ───────────────────────────────────────── */
+  #team { background: var(--bg2); }
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  .team-card {
+    text-align: center; padding: 32px 20px 24px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all .3s ease;
+  }
+  .team-card:hover { border-color: var(--accent); transform: translateY(-6px); box-shadow: var(--glow); }
+  .team-avatar {
+    width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    border: 2px solid var(--border);
+  }
+  .team-name { font-family: var(--font-head); font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .team-role { font-size: .82rem; color: var(--accent); font-weight: 500; margin-bottom: 10px; }
+  .team-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── WHY US ─────────────────────────────────────── */
+  #why { background: var(--bg); }
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .why-card {
+    display: flex; align-items: flex-start; gap: 18px;
+    padding: 24px 22px;
+    border-radius: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all .3s ease;
+  }
+  .why-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+  .why-icon {
+    flex-shrink: 0;
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+  }
+  .why-text h4 { font-family: var(--font-head); font-weight: 700; margin-bottom: 5px; }
+  .why-text p  { font-size: .86rem; color: var(--muted); }
+
+  /* ── TESTIMONIALS ───────────────────────────────── */
+  #testimonials { background: var(--bg2); }
+  .testi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .testi-card {
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all .3s ease;
+    position: relative;
+  }
+  .testi-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+  .testi-quote-mark {
+    position: absolute; top: 18px; right: 22px;
+    font-size: 4rem; color: rgba(0,212,255,.1);
+    font-family: serif; line-height: 1;
+  }
+  .stars { color: var(--accent3); font-size: 1rem; letter-spacing: 2px; margin-bottom: 14px; }
+  .testi-text { font-size: .9rem; color: var(--muted); line-height: 1.7; margin-bottom: 18px; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    background: var(--bg3); border: 1px solid var(--border);
+  }
+  .testi-name { font-weight: 600; font-size: .9rem; }
+  .testi-role { font-size: .78rem; color: var(--muted); }
+
+  /* ── CONTACT ─────────────────────────────────────── */
+  #contact { background: var(--bg); }
+  .contact-grid {
+    display: grid; grid-template-columns: 1fr 1.1fr;
+    gap: 50px; align-items: start;
+  }
+  .contact-info h3 {
+    font-family: var(--font-head); font-weight: 700; font-size: 1.5rem; margin-bottom: 16px;
+  }
+  .contact-info p { color: var(--muted); margin-bottom: 32px; line-height: 1.7; }
+  .contact-items { display: flex; flex-direction: column; gap: 16px; }
+  .contact-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    transition: border-color .2s;
+  }
+  .contact-item:hover { border-color: var(--accent); }
+  .contact-item-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(0,212,255,.15), rgba(124,58,237,.15));
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .contact-item-text { font-size: .88rem; }
+  .contact-item-label { color: var(--muted); font-size: .75rem; margin-bottom: 2px; }
+  .social-row { display: flex; gap: 12px; margin-top: 28px; }
+  .social-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 99px;
+    background: var(--card); border: 1px solid var(--border);
+    font-size: .82rem; font-weight: 600; transition: all .2s;
+  }
+  .social-btn:hover { border-color: var(--accent); color: var(--accent); }
+  /* Form */
+  .contact-form { display: flex; flex-direction: column; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group label { font-size: .82rem; font-weight: 600; color: var(--muted); }
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 10px; padding: 13px 16px;
+    font-family: var(--font-body); font-size: .92rem;
+    transition: border-color .2s, box-shadow .2s;
+    resize: none; outline: none;
+  }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder { color: var(--muted); }
+  .form-group input:focus,
+  .form-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,255,.1); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-success {
+    display: none;
+    align-items: center; gap: 10px;
+    background: rgba(39,201,63,.1); border: 1px solid rgba(39,201,63,.3);
+    border-radius: 10px; padding: 14px 18px;
+    color: #27c93f; font-weight: 600; font-size: .9rem;
+  }
+
+  /* ── FOOTER ─────────────────────────────────────── */
+  footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 50px 0 30px;
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 40px; margin-bottom: 40px;
+  }
+  .footer-brand p { color: var(--muted); font-size: .88rem; margin-top: 10px; line-height: 1.7; max-width: 260px; }
+  .footer-col h5 { font-family: var(--font-head); font-weight: 700; margin-bottom: 16px; font-size: .9rem; }
+  .footer-col ul { display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul li a { color: var(--muted); font-size: .86rem; transition: color .2s; }
+  .footer-col ul li a:hover { color: var(--accent); }
+  .footer-bottom {
+    border-top: 1px solid var(--border); padding-top: 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: .82rem; flex-wrap: wrap; gap: 12px;
+  }
+  .footer-bottom a { color: var(--accent); }
+
+  /* ── BACK TO TOP ─────────────────────────────────── */
+  #btt {
+    position: fixed; bottom: 28px; right: 28px;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; cursor: pointer; z-index: 999;
+    box-shadow: 0 0 20px rgba(0,212,255,.3);
+    opacity: 0; transform: translateY(20px);
+    transition: all .3s ease;
+    border: none; color: #fff;
+  }
+  #btt.show { opacity: 1; transform: translateY(0); }
+  #btt:hover { transform: translateY(-4px); }
+
+  /* ── RESPONSIVE ──────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .footer-top { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 900px) {
+    .hero-grid    { grid-template-columns: 1fr; }
+    .hero-visual  { display: none; }
+    .about-grid   { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .nav-links, .nav-cta { display: none; }
+    .hamburger { display: flex; }
+    .section   { padding: 70px 0; }
+    .footer-top { grid-template-columns: 1fr; gap: 28px; }
+    .form-row  { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .hero-stats { gap: 20px; }
+    .hero-btns  { flex-direction: column; }
+    .btn        { width: 100%; justify-content: center; }
+    .projects-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 1600px) {
+    .container { max-width: 1400px; }
+    .section-title { font-size: 3.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">NT <span>TechWorks</span></a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#team">Team</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="#contact" class="btn btn-primary" style="padding:10px 22px;font-size:.82rem;">Get in Touch</a>
+      </div>
+      <div class="hamburger" id="hamburger">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about"        onclick="closeMobile()">About</a>
+  <a href="#skills"       onclick="closeMobile()">Skills</a>
+  <a href="#services"     onclick="closeMobile()">Services</a>
+  <a href="#projects"     onclick="closeMobile()">Projects</a>
+  <a href="#team"         onclick="closeMobile()">Team</a>
+  <a href="#testimonials" onclick="closeMobile()">Reviews</a>
+  <a href="#contact"      onclick="closeMobile()">Contact</a>
+</div>
+
+<!-- ══ HERO ════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="hero-orb orb1"></div>
+    <div class="hero-orb orb2"></div>
+    <div class="hero-orb orb3"></div>
+  </div>
+  <div class="container">
+    <div class="hero-grid">
+      <!-- Left -->
+      <div class="hero-content reveal">
+        <div class="hero-badge">Available for freelance projects</div>
+        <h1 class="hero-title">
+          Building Modern,<br/>
+          <span class="grad-text">Responsive</span> &amp;<br/>
+          High-Performance<br/>Websites
+        </h1>
+        <p class="hero-sub">
+          We craft pixel-perfect, blazing-fast web experiences that convert visitors into customers. From concept to launch — clean code, stunning design, real results.
+        </p>
+        <div class="hero-btns">
+          <a href="#projects" class="btn btn-primary">View Projects ↗</a>
+          <a href="#contact"  class="btn btn-outline">Contact Me</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-num">50+</div>
+            <div class="stat-label">Projects Delivered</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">30+</div>
+            <div class="stat-label">Happy Clients</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num">3+</div>
+            <div class="stat-label">Years Experience</div>
+          </div>
+        </div>
+      </div>
+      <!-- Right Visual -->
+      <div class="hero-visual reveal-r">
+        <div class="hero-card-main">
+          <div class="card-dot-row">
+            <div class="card-dot d1"></div>
+            <div class="card-dot d2"></div>
+            <div class="card-dot d3"></div>
+          </div>
+          <pre><span class="kw">const</span> <span class="fn">ntTechWorks</span> = {
+  <span class="str">stack</span>: [<span class="str">"React"</span>, <span class="str">"Node.js"</span>],
+  <span class="str">design</span>: <span class="str">"pixel-perfect"</span>,
+  <span class="str">speed</span>: <span class="str">"blazing fast"</span>,
+  <span class="str">delivery</span>: <span class="str">"on-time"</span>,
+  <span class="str">clients</span>: <span class="num">30+</span>,
+
+  <span class="fn">build</span>: (<span class="str">dream</span>) =&gt; {
+    <span class="kw">return</span> <span class="fn">launch</span>(
+      <span class="str">clean_code</span>,
+      <span class="str">modern_design</span>,
+      <span class="str">real_results</span> ✓
+    );
+  }
+};</pre>
+          <div class="floating-chip chip1">⚡ Fast Load</div>
+          <div class="floating-chip chip2">✅ SEO Ready</div>
+          <div class="floating-chip chip3">📱 Responsive</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ABOUT ════════════════════════════════════════ -->
+<section id="about" class="section">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text reveal-r">
+        <div class="tag">About Us</div>
+        <h2 class="section-title">We Build More Than<br/><span class="grad-text">Just Websites</span></h2>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">
+          NT TechWorks is a passionate and skilled freelance web development team focused on building modern, responsive, and high-performance websites.
+        </p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">
+          Our team consists of professionals specializing in frontend development, backend development, UI/UX design, and testing. We work collaboratively to deliver clean, user-friendly, and visually appealing digital experiences for every project.
+        </p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">
+          We help small businesses, startups, and individuals establish a strong online presence through high-quality websites — from restaurant and gym websites to e-commerce platforms and portfolio sites.
+        </p>
+        <div class="about-quote">
+          "We don't just build websites, we build trust and digital growth."
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SKILLS ═══════════════════════════════════════ -->
+<section id="skills" class="section">
+  <div class="container">
+    <div class="tag reveal">Our Skills</div>
+    <h2 class="section-title reveal">Technologies &amp; <span class="grad-text">Expertise</span></h2>
+    <p class="section-sub reveal">Modern tools and techniques to deliver world-class web experiences.</p>
+    <div class="skills-grid" id="skillsGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ SERVICES ═════════════════════════════════════ -->
+<section id="services" class="section">
+  <div class="container">
+    <div class="tag reveal">Services</div>
+    <h2 class="section-title reveal">What We <span class="grad-text">Offer</span></h2>
+    <p class="section-sub reveal">Full-stack web development solutions tailored to your business needs.</p>
+    <div class="services-grid" id="servicesGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ PROJECTS ═════════════════════════════════════ -->
+<section id="projects" class="section">
+  <div class="container">
+    <div class="tag reveal">Portfolio</div>
+    <h2 class="section-title reveal">Featured <span class="grad-text">Projects</span></h2>
+    <p class="section-sub reveal">Real-world projects we've built with passion and precision.</p>
+    <div class="projects-grid" id="projectsGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ TEAM ══════════════════════════════════════════ -->
+<section id="team" class="section">
+  <div class="container">
+    <div class="tag reveal">Our Team</div>
+    <h2 class="section-title reveal">Meet the <span class="grad-text">Team</span></h2>
+    <p class="section-sub reveal">A dedicated squad of creative minds working in perfect sync.</p>
+    <div class="team-grid" id="teamGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ WHY US ════════════════════════════════════════ -->
+<section id="why" class="section">
+  <div class="container">
+    <div class="tag reveal">Why NT TechWorks</div>
+    <h2 class="section-title reveal">Why Clients <span class="grad-text">Trust Us</span></h2>
+    <p class="section-sub reveal">The values and standards that set us apart from the competition.</p>
+    <div class="why-grid" id="whyGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ TESTIMONIALS ══════════════════════════════════ -->
+<section id="testimonials" class="section">
+  <div class="container">
+    <div class="tag reveal">Reviews</div>
+    <h2 class="section-title reveal">Client <span class="grad-text">Testimonials</span></h2>
+    <p class="section-sub reveal">Don't take our word for it — hear it from our happy clients.</p>
+    <div class="testi-grid" id="testiGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══ CONTACT ════════════════════════════════════════ -->
+<section id="contact" class="section">
+  <div class="container">
+    <div class="tag reveal">Get In Touch</div>
+    <h2 class="section-title reveal">Let's Build Something <span class="grad-text">Amazing</span></h2>
+    <p class="section-sub reveal">Have a project in mind? Reach out and let's turn your vision into reality.</p>
+    <div class="contact-grid">
+      <!-- Info -->
+      <div class="reveal-l">
+        <h3>Contact Information</h3>
+        <p>We're always happy to discuss your project requirements. Get in touch today!</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <div class="contact-item-icon">📞</div>
+            <div class="contact-item-text">
+              <div class="contact-item-label">Phone</div>
+              <div>9087053794 | 9626782279</div>
+            </div>
+          </div>
+          <a href="mailto:nttechworks5@gmail.com" class="contact-item">
+            <div class="contact-item-icon">✉️</div>
+            <div class="contact-item-text">
+              <div class="contact-item-label">Email</div>
+              <div>nttechworks5@gmail.com</div>
+            </div>
+          </a>
+        </div>
+        <div class="social-row">
+          <a href="https://www.youtube.com/@NT_techstudio" target="_blank" class="social-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-2.7C14.16 2.86 13.07 2 11.87 2H5.5A3.5 3.5 0 0 0 2 5.5v13A3.5 3.5 0 0 0 5.5 22h13a3.5 3.5 0 0 0 3.5-3.5v-8a3.5 3.5 0 0 0-2.41-3.81zM10 15.5v-7l6 3.5-6 3.5z"/></svg>
+            YouTube
+          </a>
+          <a href="https://www.instagram.com/nt_techworks" target="_blank" class="social-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            Instagram
+          </a>
+        </div>
+      </div>
+      <!-- Form -->
+      <div class="glass reveal-r" style="padding:32px;">
+        <h3 style="font-family:var(--font-head);font-weight:700;font-size:1.3rem;margin-bottom:24px;">Send a Message</h3>
+        <form class="contact-form" id="contactForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input type="text" id="fname" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label>Email Address *</label>
+              <input type="email" id="femail" placeholder="your@email.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="fphone" placeholder="+91 00000 00000" />
+          </div>
+          <div class="form-group">
+            <label>Service Needed</label>
+            <select id="fservice">
+              <option value="">Select a service…</option>
+              <option>Responsive Website Development</option>
+              <option>Business Website</option>
+              <option>Restaurant Website</option>
+              <option>Gym Website</option>
+              <option>E-commerce Website</option>
+              <option>Portfolio Website</option>
+              <option>Landing Page</option>
+              <option>Website Redesign</option>
+              <option>Lead Generation Forms</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Your Message *</label>
+            <textarea id="fmsg" rows="4" placeholder="Tell us about your project…" required></textarea>
+          </div>
+          <div class="form-success" id="formSuccess">✅ Message sent! We'll get back to you shortly.</div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:15px;">
+            Send Message ✈
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo" style="font-size:1.5rem;">NT <span>TechWorks</span></div>
+        <p>Building modern, responsive & high-performance websites that help businesses grow online.</p>
+        <div class="social-row" style="margin-top:18px;">
+          <a href="https://www.youtube.com/@NT_techstudio" target="_blank" class="social-btn" style="padding:8px 14px;font-size:.78rem;">▶ YouTube</a>
+          <a href="https://www.instagram.com/nt_techworks" target="_blank" class="social-btn" style="padding:8px 14px;font-size:.78rem;">📸 Instagram</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Services</h5>
+        <ul>
+          <li><a href="#services">Business Websites</a></li>
+          <li><a href="#services">E-commerce</a></li>
+          <li><a href="#services">Landing Pages</a></li>
+          <li><a href="#services">Website Redesign</a></li>
+          <li><a href="#services">Portfolio Sites</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#team">Our Team</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#why">Why Us</a></li>
+          <li><a href="#testimonials">Reviews</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="tel:9087053794">📞 9087053794</a></li>
+          <li><a href="tel:9626782279">📞 9626782279</a></li>
+          <li><a href="mailto:nttechworks5@gmail.com">✉️ nttechworks5@gmail.com</a></li>
+          <li><a href="https://www.youtube.com/@NT_techstudio" target="_blank">▶ NT_techstudio</a></li>
+          <li><a href="https://www.instagram.com/nt_techworks" target="_blank">📸 nt_techworks</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2025 NT TechWorks. All rights reserved.</div>
+      <div>Built with ❤️ by <a href="#hero">NT TechWorks</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top -->
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ══ JAVASCRIPT ═════════════════════════════════════ -->
+<script>
+// ── DATA ────────────────────────────────────────────
+const SKILLS = [
+  { icon:'🌐', name:'HTML & CSS',                  pct:95 },
+  { icon:'⚡', name:'JavaScript (ES6+)',             pct:90 },
+  { icon:'📱', name:'Responsive Web Design',         pct:95 },
+  { icon:'⚛️', name:'Frontend Development',          pct:88 },
+  { icon:'🟢', name:'Node.js (Backend)',              pct:72 },
+  { icon:'🎨', name:'UI/UX Design Understanding',    pct:82 },
+  { icon:'🔍', name:'SEO Optimization',              pct:80 },
+  { icon:'🚀', name:'Performance Optimization',      pct:85 },
+  { icon:'☁️', name:'Deployment & Hosting',          pct:88 },
+  { icon:'📋', name:'Lead Generation Systems',       pct:78 },
+];
+
+const SERVICES = [
+  { icon:'🖥️', title:'Responsive Website Development', desc:'Mobile-first, pixel-perfect websites that look stunning on every device — mobile, tablet, laptop, desktop & TV.' },
+  { icon:'🏢', title:'Business Websites',               desc:'Professional corporate websites that establish credibility and drive business growth online.' },
+  { icon:'🍽️', title:'Restaurant Websites',            desc:'Mouth-watering restaurant sites with menus, reservations, and a delicious user experience.' },
+  { icon:'💪', title:'Gym & Fitness Websites',          desc:'High-energy gym websites with class schedules, trainer profiles, and membership systems.' },
+  { icon:'🛒', title:'E-commerce Websites',             desc:'Full-featured online stores with product management, cart, checkout, and payment integration.' },
+  { icon:'🗂️', title:'Portfolio Websites',             desc:'Personal & professional portfolio sites that showcase your work and make you stand out.' },
+  { icon:'📄', title:'Landing Pages',                   desc:'Conversion-optimized landing pages engineered to turn visitors into leads and customers.' },
+  { icon:'🔧', title:'Website Redesign',                desc:'Breathe new life into your old website with a modern redesign that improves UX and performance.' },
+  { icon:'📬', title:'Lead Generation Forms',           desc:'Smart forms and lead capture systems that help you collect and manage customer inquiries.' },
+];
+
+const PROJECTS = [
+  {
+    emoji: '🍽️', thumbClass: 'thumb-restaurant',
+    title: 'Spice Garden Restaurant',
+    desc: 'A beautifully designed restaurant website featuring an interactive menu, online table reservation system, gallery section, and Google Maps integration.',
+    techs: ['HTML5','CSS3','JavaScript','Node.js'],
+    live: '#'
+  },
+  {
+    emoji: '💪', thumbClass: 'thumb-gym',
+    title: 'FitPulse Gym & Fitness',
+    desc: 'High-energy gym website with class schedules, trainer profiles, membership plans, and a lead capture form for free trial sign-ups.',
+    techs: ['HTML5','CSS3','JavaScript','Responsive'],
+    live: '#'
+  },
+  {
+    emoji: '🛍️', thumbClass: 'thumb-ecom',
+    title: 'ShopEase E-Commerce',
+    desc: 'Modern e-commerce platform with product listings, cart functionality, filter/search, and a clean checkout flow.',
+    techs: ['HTML5','CSS3','JavaScript','Node.js','MongoDB'],
+    live: '#'
+  },
+];
+
+const TEAM = [
+  { emoji:'🎨', name:'Gowtham',      role:'UI/UX Designer',      desc:'Modern design & AI-integrated UI. Creates visually stunning interfaces with exceptional user experience.' },
+  { emoji:'🔬', name:'Mahesh Kumar', role:'QA Tester',            desc:'Quality assurance & bug testing. Ensures every website is bug-free, smooth, and production-ready.' },
+  { emoji:'⚙️', name:'Harisudhan',  role:'Backend Developer',    desc:'Node.js & server-side wizardry. Builds robust APIs, databases, and server infrastructure.' },
+  { emoji:'🖥️', name:'Dhanush',     role:'Frontend Developer',   desc:'Pixel-perfect HTML/CSS/JS. Transforms designs into responsive, animated, high-performance interfaces.' },
+  { emoji:'💻', name:'Niranjan',    role:'Web Developer',        desc:'Builds modern, responsive websites with clean code and a strong focus on performance and usability.' },
+];
+
+const WHY = [
+  { icon:'🎨', title:'Modern Design Approach',     desc:'We follow latest design trends with glassmorphism, gradients, and micro-animations for a premium look.' },
+  { icon:'⚡', title:'Fast & Responsive Websites', desc:'Optimized for speed with lazy loading, minification, and mobile-first responsive design across all screens.' },
+  { icon:'🔍', title:'SEO Friendly',               desc:'Built with clean semantic HTML and SEO best practices to help your business rank higher on Google.' },
+  { icon:'✨', title:'Clean, Scalable Code',        desc:'We write well-structured, maintainable code that\'s easy to update and scale as your business grows.' },
+  { icon:'⏰', title:'On-Time Delivery',            desc:'We respect your deadlines. Every project is delivered on schedule with zero compromise on quality.' },
+  { icon:'❤️', title:'Client Satisfaction Focus',  desc:'Your success is our success. We work closely with clients and iterate until you\'re 100% satisfied.' },
+];
+
+const TESTIMONIALS = [
+  { emoji:'👨‍💼', name:'Ramesh Kumar',   role:'Restaurant Owner',        stars:5, text:'NT TechWorks built our restaurant website and the results were incredible. Bookings doubled within a month. Professional team, great communication!' },
+  { emoji:'👩‍💻', name:'Priya S.',        role:'Startup Founder',         stars:5, text:'They redesigned our old website completely. The new site looks stunning and loads super fast. Our bounce rate dropped by 40%. Highly recommended!' },
+  { emoji:'🏋️', name:'Arjun Fitness',   role:'Gym Owner',               stars:5, text:'Our gym website is exactly what we envisioned. Clean, energetic, and members love the online schedule. Worth every rupee invested!' },
+  { emoji:'👨‍🎓', name:'Karthick Raj',   role:'Freelancer',              stars:5, text:'Got my portfolio website built in just 5 days. It\'s beautiful, fast, and already getting me clients. NT TechWorks is genuinely talented.' },
+  { emoji:'🛍️', name:'Meena Stores',    role:'E-commerce Business',    stars:5, text:'Our online store was built from scratch and works perfectly. The team handled everything from design to deployment. Super satisfied!' },
+];
+
+// ── RENDER ──────────────────────────────────────────
+function renderSkills() {
+  const g = document.getElementById('skillsGrid');
+  g.innerHTML = SKILLS.map((s,i) => `
+    <div class="skill-card reveal" style="transition-delay:${i*0.06}s">
+      <div class="skill-icon">${s.icon}</div>
+      <div class="skill-name">${s.name}</div>
+      <div class="skill-bar-wrap">
+        <div class="skill-bar" data-pct="${s.pct}" style="width:0%"></div>
+      </div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;text-align:right;">${s.pct}%</div>
+    </div>`).join('');
+}
+
+function renderServices() {
+  document.getElementById('servicesGrid').innerHTML = SERVICES.map((s,i) => `
+    <div class="service-card reveal" style="transition-delay:${i*0.07}s">
+      <div class="svc-icon">${s.icon}</div>
+      <div class="svc-title">${s.title}</div>
+      <div class="svc-desc">${s.desc}</div>
+    </div>`).join('');
+}
+
+function renderProjects() {
+  document.getElementById('projectsGrid').innerHTML = PROJECTS.map((p,i) => `
+    <div class="project-card reveal" style="transition-delay:${i*0.12}s">
+      <div class="project-thumb ${p.thumbClass}">
+        <span class="thumb-emoji">${p.emoji}</span>
+      </div>
+      <div class="project-body">
+        <div class="project-title">${p.title}</div>
+        <div class="project-desc">${p.desc}</div>
+        <div class="tech-tags">
+          ${p.techs.map(t=>`<span class="tech-tag">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div class="project-footer">
+        <a href="${p.live}" class="project-link">View Project →</a>
+        <span style="font-size:.78rem;color:var(--muted);">Case Study</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderTeam() {
+  document.getElementById('teamGrid').innerHTML = TEAM.map((m,i) => `
+    <div class="team-card reveal" style="transition-delay:${i*0.1}s">
+      <div class="team-avatar" style="background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(124,58,237,.12));border-color:rgba(0,212,255,.2);">${m.emoji}</div>
+      <div class="team-name">${m.name}</div>
+      <div class="team-role">${m.role}</div>
+      <div class="team-desc">${m.desc}</div>
+    </div>`).join('');
+}
+
+function renderWhy() {
+  document.getElementById('whyGrid').innerHTML = WHY.map((w,i) => `
+    <div class="why-card reveal" style="transition-delay:${i*0.08}s">
+      <div class="why-icon">${w.icon}</div>
+      <div class="why-text">
+        <h4>${w.title}</h4>
+        <p>${w.desc}</p>
+      </div>
+    </div>`).join('');
+}
+
+function renderTestimonials() {
+  document.getElementById('testiGrid').innerHTML = TESTIMONIALS.map((t,i) => `
+    <div class="testi-card reveal" style="transition-delay:${i*0.1}s">
+      <div class="testi-quote-mark">"</div>
+      <div class="stars">${'⭐'.repeat(t.stars)}</div>
+      <div class="testi-text">${t.text}</div>
+      <div class="testi-author">
+        <div class="testi-avatar">${t.emoji}</div>
+        <div>
+          <div class="testi-name">${t.name}</div>
+          <div class="testi-role">${t.role}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── SCROLL OBSERVER ──────────────────────────────────
+function setupObserver() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        // Animate skill bars
+        if (e.target.classList.contains('skill-card')) {
+          const bar = e.target.querySelector('.skill-bar');
+          if (bar) bar.style.width = bar.dataset.pct + '%';
+        }
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(el => obs.observe(el));
+}
+
+// ── NAVBAR ────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  const btt = document.getElementById('btt');
+  if (window.scrollY > 60) nav.classList.add('scrolled'); else nav.classList.remove('scrolled');
+  if (window.scrollY > 400) btt.classList.add('show'); else btt.classList.remove('show');
+});
+
+// ── HAMBURGER ─────────────────────────────────────────
+const ham  = document.getElementById('hamburger');
+const mob  = document.getElementById('mobileMenu');
+ham.addEventListener('click', () => mob.classList.toggle('open'));
+function closeMobile() { mob.classList.remove('open'); }
+
+// ── CONTACT FORM ──────────────────────────────────────
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button[type=submit]');
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.style.display = 'none';
+    document.getElementById('formSuccess').style.display = 'flex';
+    this.reset();
+  }, 1200);
+});
+
+// ── INIT ──────────────────────────────────────────────
+renderSkills();
+renderServices();
+renderProjects();
+renderTeam();
+renderWhy();
+renderTestimonials();
+setupObserver();
+</script>
+</body>
+</html>
